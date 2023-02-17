@@ -10,12 +10,27 @@ export const Home = () => {
   const handleWord = (event) => setWord(event.target.value.toLocaleLowerCase());
 
   const [word, setWord] = useState("");
+  const [wordCapture, setWordCapture] = useState("");
   const [error, setError] = useState("");
   const [search, setSearch] = useState([]);
 
+  const debounce = (func, timeout = 100) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { func.apply(this, args); }, timeout);
+    };
+  }
+
+  const searchInput = ()=> {
+    setWordCapture(word)
+  }
+
+  const processChange = debounce(() => searchInput());
+
   useEffect(() => {
     api
-      .get(`${word}`)
+      .get(`${wordCapture}`)
       .then((response) => {setSearch(response.data)
         setError('')
       }
@@ -24,9 +39,7 @@ export const Home = () => {
         setError('Palavra não encontrada')
         setSearch([])}
       );
-  }, [word]);
-
-  console.log(error)
+  }, [wordCapture]);
 
   return (
     <div>
@@ -36,14 +49,18 @@ export const Home = () => {
           placeholder="Qual palavra você quer encontrar?"
           value={word}
           onChange={handleWord}
+          onKeyUp={processChange}
         />
-        <button>
+        <button 
+          onClick={processChange}
+          type='button'
+          >
           <img src={IconSearch} alt="Lupa" />
         </button>
       </div>
-      {word && error ? <p id="error-msg">{error}</p> : ''}
-      {word ? (
-        <Content keyWord={search} word={word} />
+      {wordCapture && error ? <p id="error-msg">{error}</p> : ''}
+      {wordCapture ? (
+        <Content keyWord={search} word={wordCapture} />
       ) : (
         <div id="container-img">
           <img
